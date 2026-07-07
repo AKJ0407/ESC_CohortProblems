@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"fs.cpSync('./public', './dist/public/', { recursive: true })\"",
     "start": "node ./dist/bin/www",
-    "dev": "tsc && node ./dist/bin/www"
+    "dev": "tsc && node -e \"fs.cpSync('./public', './dist/public/', { recursive: true })\" && node ./dist/bin/www"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
