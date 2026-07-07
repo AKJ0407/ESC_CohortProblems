@@ -43,13 +43,13 @@ the user can use the form in `https://localhost:3000/staff/` to add new staff an
 
 ### Task 1 (2 Marks)
 
-Complete the TODOs in the React component `Dept.jsx` so that the department table is rendered (see below) when `Department` tab bar is clicked.
+Complete the TODOs in the React component `Dept.tsx` so that the department table is rendered (see below) when `Department` tab bar is clicked.
 
 ![](../images/ce8_q2_1.png)
 
 ### Task 2 (3 Marks)
 
-Complete the TODOs in the React component `Staff.jsx` so that the department code dropdown can be rendered on start.
+Complete the TODOs in the React component `Staff.tsx` so that the department code dropdown can be rendered on start.
 
 ![](../images/ce8_q2_2.png)
 
