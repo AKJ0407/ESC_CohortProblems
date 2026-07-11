@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import * as process from 'process';
+import proc from 'process';
 import db from './models/db';
 
 import * as staffModel from './models/staff';
@@ -14,8 +14,8 @@ staffModel.sync();
 deptModel.sync();
 workfModel.sync();
 
-process.on('SIGINT', db.cleanup);
-process.on('SIGTERM', db.cleanup);
+proc.on('SIGINT', db.cleanup);
+proc.on('SIGTERM', db.cleanup);
 
 import indexRouter from './routes/index';
 import usersRouter from './routes/users';

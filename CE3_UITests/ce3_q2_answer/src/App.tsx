@@ -2,9 +2,6 @@ import './App.css';
 import { useState } from 'react';
 import Dept from './Dept';
 import Staff from './Staff';
-
-
-
 function App() {
   const url = `http://localhost:3000`;
   const DEPT = 0;
