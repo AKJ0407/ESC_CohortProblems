@@ -1,53 +1,55 @@
-const db = require('./db.js');
-const workModel = require('./work.js');
+import db from './db';
+import * as workModel from './work';
+
 const tableName = 'staff';
 
-class Staff {
-    constructor(id, name, code) {
+export class Staff {
+    public id?: number;
+    public name: string;
+    public code?: string;
+
+    constructor(id: number | undefined, name: string, code: string | undefined) {
         this.id = id;
         this.name = name;
         this.code = code;
     }
 
-    static newStaff(name, code) {
-        // in JS, only one constructor is allowed
-        // we need a factory method
+    public static newStaff(name: string, code: string): Staff {
         return new Staff(undefined, name, code);
     }
 }
 
-
-async function sync() {
-    try { // for simplicity, we assume staff names are uniqe (in the absence of NRIC or personal email)
-        db.pool.query(`
+export async function sync() {
+    try {
+        await db.pool.query(`
         CREATE TABLE IF NOT EXISTS ${tableName} (
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) UNIQUE
         )
         `);
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
 
-/** return all staffs in the db, ignoring the dept field
+/**
+ * return all staffs in the db, ignoring the dept field
  * @returns a list of staffs
  */
-async function all() {
+export async function all(): Promise<Staff[]> {
     try {
-        
-        const [rows, fieldDefs] = await db.pool.query(`
-            SELECT ${tableName}.id, ${tableName}.name, work.code FROM ${tableName} 
+        const [rows] = await db.pool.query(`
+            SELECT ${tableName}.id, ${tableName}.name, work.code FROM ${tableName}
             LEFT JOIN work ON ${tableName}.id = work.id
         `);
-        var list = [];
-        for (let row of rows) {
-            let staff = new Staff(row.id, row.name, row.code);
+        const list: Staff[] = [];
+        for (const row of rows as any[]) {
+            const staff = new Staff(row.id, row.name, row.code);
             list.push(staff);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -55,72 +57,70 @@ async function all() {
 
 /**
  * return one staff in a list if exists by its staff id
- * @param {int} id the staff id 
+ * @param id the staff id
  * @returns a list of staffs (either empty or one staff)
  */
-async function findOneById(id) {
+export async function findOneById(id: number): Promise<Staff[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT ${tableName}.id, ${tableName}.name, work.code FROM ${tableName}
-            LEFT JOIN work ON ${tableName}.id = work.id 
+            LEFT JOIN work ON ${tableName}.id = work.id
             WHERE ${tableName}.id = ?`, [id]
         );
-        var list = [];
-        for (let row of rows) {
-            let staff = new Staff(row.id, row.name, row.code);
+        const list: Staff[] = [];
+        for (const row of rows as any[]) {
+            const staff = new Staff(row.id, row.name, row.code);
             list.push(staff);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
-
 
 /**
  * return one staff in a list if exists by its staff name
- * @param {string} name the staff's name
+ * @param name the staff's name
  * @returns a list of staffs (either empty or one staff)
  */
-async function findOneByName(name) {
+export async function findOneByName(name: string): Promise<Staff[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT ${tableName}.id, ${tableName}.name, work.code FROM ${tableName}
-            LEFT JOIN work ON ${tableName}.id = work.id 
+            LEFT JOIN work ON ${tableName}.id = work.id
             WHERE ${tableName}.name = ?`, [name]
         );
-        var list = [];
-        for (let row of rows) {
-            let staff = new Staff(row.id, row.name, row.code);
+        const list: Staff[] = [];
+        for (const row of rows as any[]) {
+            const staff = new Staff(row.id, row.name, row.code);
             list.push(staff);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
 
-
 /**
  * Return a list of staffs by the given dept code
- * @param {string} code, dept code 
+ * @param code dept code
  * @returns a list of staffs
  */
-async function findByDept(code) {
+export async function findByDept(code: string): Promise<Staff[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
-        SELECT ${tableName}.id, ${tableName}.name, work.code FROM ${tableName} 
+        const [rows] = await db.pool.query(`
+        SELECT ${tableName}.id, ${tableName}.name, work.code FROM ${tableName}
         INNER JOIN work ON ${tableName}.id = work.id AND work.code = ?`, [code]
         );
-        var list = [];
-        for (let row of rows) {
-            let staff = new Staff(row.id, row.name, row.code);
+        const list: Staff[] = [];
+        for (const row of rows as any[]) {
+            const staff = new Staff(row.id, row.name, row.code);
             list.push(staff);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -128,24 +128,22 @@ async function findByDept(code) {
 
 /**
  * insert the given staff object into the db if it does not exist
- * @param {Staff} staff 
- * @param {boolean} with_dept 
+ * @param staff
  */
-
-async function insertOne(staff) {
+export async function insertOne(staff: Staff) {
     try {
         const exists = await findOneByName(staff.name);
-        if (exists.length == 0) {
-            const [rows, fieldDefs] = await db.pool.query(`
+        if (exists.length === 0) {
+            await db.pool.query(`
             INSERT INTO ${tableName} (name) VALUES (?)
             `, [staff.name]);
             const staffs_with_id = await findOneByName(staff.name);
             if (staffs_with_id.length > 0) {
-                const work = new workModel.Work(staffs_with_id[0].id, staff.code);
-                await workModel.insertOne(work);    
+                const work = new workModel.Work(staffs_with_id[0].id!, staff.code!);
+                await workModel.insertOne(work);
             }
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -153,27 +151,24 @@ async function insertOne(staff) {
 
 /**
  * Insert a list of staffs
- * @param {[Staff]} staffs 
+ * @param staffs
  */
-async function insertMany(staffs) {
-    for (let staff of staffs) {
-        await insertOne(staff);
+export async function insertMany(staffs: Staff[]) {
+    for (const s of staffs) {
+        await insertOne(s);
     }
 }
 
 /**
  * Delete the staff from the db
- * @param {Staff} staff 
+ * @param staff
  */
-async function deleteOne(staff) {
+export async function deleteOne(staff: Staff) {
     try {
         await db.pool.query(`DELETE FROM work where id = ?`, [staff.id]);
         await db.pool.query(`DELETE FROM ${tableName} where id = ?`, [staff.id]);
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
-
-
-module.exports =  { Staff, all, findOneById, findByDept, findOneByName, sync, insertOne, insertMany, deleteOne }

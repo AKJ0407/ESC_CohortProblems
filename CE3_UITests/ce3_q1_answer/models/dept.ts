@@ -1,45 +1,45 @@
-const db = require('./db.js');
-const workModel = require('./work.js');
-const staffModel = require('./staff.js');
+import db from './db';
+import * as staffModel from './staff';
+
 const tableName = 'dept';
 
+export class Dept {
+    public code: string;
+    public staffs?: any[];
 
-class Dept {
-    constructor(code) {
+    constructor(code: string) {
         this.code = code;
     }
 }
 
-
-async function sync() {
+export async function sync() {
     try {
-        db.pool.query(`
+        await db.pool.query(`
         CREATE TABLE IF NOT EXISTS ${tableName} (
             code CHAR(2) PRIMARY KEY
         )
         `);
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
 
 /**
- * 
  * @returns a list of all dept entries
  */
-async function all() {
+export async function all(): Promise<Dept[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT code FROM ${tableName}
         `);
-        var list = [];
-        for (let row of rows) {
-            let dept = new Dept(row.code);
+        const list: Dept[] = [];
+        for (const row of rows as any[]) {
+            const dept = new Dept(row.code);
             list.push(dept);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -47,26 +47,26 @@ async function all() {
 
 /**
  * find one dept entry by code
- * @param {string} code 
- * @param {boolean} with_staffs 
+ * @param code
+ * @param with_staffs
  * @returns a list of dept entries (either empty or one)
  */
-async function findOneByCode(code, with_staffs=false) {
+export async function findOneByCode(code: string, with_staffs: boolean = false): Promise<Dept[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT code FROM ${tableName} WHERE code = ?`, [code]
         );
-        var list = []
-        for (let row of rows) {
-            let dept = new Dept(row.code);
+        const list: Dept[] = [];
+        for (const row of rows as any[]) {
+            const dept = new Dept(row.code);
             if (with_staffs) {
-                const staffs  = staffModel.findByDept(dept.code);
+                const staffs = await staffModel.findByDept(dept.code);
                 dept.staffs = staffs;
             }
             list.push(dept);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -74,17 +74,17 @@ async function findOneByCode(code, with_staffs=false) {
 
 /**
  * insert a dept entry if it does not exist
- * @param {Dept} dept 
+ * @param dept
  */
-async function insertOne(dept) {
+export async function insertOne(dept: Dept) {
     try {
         const exists = await findOneByCode(dept.code);
-        if (exists.length == 0) {
-            const [rows, fieldDefs] = await db.pool.query(`
+        if (exists.length === 0) {
+            await db.pool.query(`
             INSERT INTO ${tableName} (code) VALUES (?)
             `, [dept.code]);
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -92,27 +92,24 @@ async function insertOne(dept) {
 
 /**
  * insert a list of dept entries
- * @param {[Dept]} depts 
+ * @param depts
  */
-async function insertMany(depts) {
-    for (let dept of depts) {
+export async function insertMany(depts: Dept[]) {
+    for (const dept of depts) {
         await insertOne(dept);
     }
 }
 
 /**
  * delete a dept entry from the db
- * @param {Dept} dept 
+ * @param dept
  */
-async function deleteOne(dept) {
+export async function deleteOne(dept: Dept) {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        await db.pool.query(`
             DELETE FROM ${tableName} where code = ?`, [dept.code]);
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
-
-
-module.exports =  { Dept, all, findOneByCode, sync, insertOne, insertMany, deleteOne }

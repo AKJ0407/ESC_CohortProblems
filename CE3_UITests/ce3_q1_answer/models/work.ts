@@ -1,49 +1,50 @@
-const db = require('./db.js');
-
+import db from './db';
 
 const tableName = 'work';
 
+export class Work {
+    public id: number;
+    public code: string;
 
-class Work {
-    constructor(id, code) {
-        this.id = id; // staff id 
-        this.code = code; // deptartment code
+    constructor(id: number, code: string) {
+        this.id = id;
+        this.code = code;
     }
 }
 
-
-async function sync() {
+export async function sync() {
     try {
-        db.pool.query(`
+        await db.pool.query(`
         CREATE TABLE IF NOT EXISTS ${tableName} (
             id INTEGER,
             code CHAR(2),
             PRIMARY KEY (id, code),
             FOREIGN KEY (id) REFERENCES staff(id),
-            FOREIGN KEY (code) REFERENCES dept(code)        )
+            FOREIGN KEY (code) REFERENCES dept(code)
+        )
         `);
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
+
 /**
  * return the list of all work entries
  * @returns a list of works
  */
-async function all() {
+export async function all(): Promise<Work[]> {
     try {
-        
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT id, code FROM ${tableName}
         `);
-        var list = [];
-        for (let row of rows) {
-            let work = new Work(row.id, row.code);
+        const list: Work[] = [];
+        for (const row of rows as any[]) {
+            const work = new Work(row.id, row.code);
             list.push(work);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -51,63 +52,61 @@ async function all() {
 
 /**
  * find a work object in the db
- * @param {Work} work 
+ * @param work
  * @returns a list of works (either empty or one object)
  */
-async function findOne(work) {
+export async function findOne(work: Work): Promise<Work[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT id, code FROM ${tableName} WHERE id = ? AND code = ?`, [work.id, work.code]
         );
-        var list = []
-        for (let row of rows) {
-            let work = new Work(row.id, row.code);
-            list.push(work);
+        const list: Work[] = [];
+        for (const row of rows as any[]) {
+            const w = new Work(row.id, row.code);
+            list.push(w);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
 
-
 /**
  * return a list of work entries by staff id
- * @param {int} staff_id 
+ * @param staff_id
  * @returns a list of works (empty or one, since a staff can only belong to one dept)
  */
-async function findByStaffId(staff_id) {
+export async function findByStaffId(staff_id: number): Promise<Work[]> {
     try {
-        const [rows, fieldDefs] = await db.pool.query(`
+        const [rows] = await db.pool.query(`
             SELECT id, code FROM ${tableName} WHERE id = ?`, [staff_id]
         );
-        var list = []
-        for (let row of rows) {
-            let work = new Work(row.id, row.code);
+        const list: Work[] = [];
+        for (const row of rows as any[]) {
+            const work = new Work(row.id, row.code);
             list.push(work);
         }
         return list;
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
-
 }
 
 /**
  * Insert a work object into the database if it does not exist
- * @param {Work} work 
+ * @param work
  */
-async function insertOne(work) {
+export async function insertOne(work: Work) {
     try {
         const exists = await findOne(work);
-        if (exists.length == 0) {
-            const [rows, fieldDefs] = await db.pool.query(`
+        if (exists.length === 0) {
+            await db.pool.query(`
             INSERT INTO ${tableName} (id, code) VALUES (?, ?)
             `, [work.id, work.code]);
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
@@ -115,27 +114,24 @@ async function insertOne(work) {
 
 /**
  * Insert a list of work entries
- * @param {[Work]} works 
+ * @param works
  */
-async function insertMany(works) {
-    for (let work of works) {
+export async function insertMany(works: Work[]) {
+    for (const work of works) {
         await insertOne(work);
     }
 }
 
 /**
  * Delete a work object from the database
- * @param {Work} work 
+ * @param work
  */
-async function deleteOne(work) {
+export async function deleteOne(work: Work) {
     try {
         await db.pool.query(`
             DELETE FROM ${tableName} where id = ? AND code = ?`, [work.id, work.code]);
-    } catch (error) {
+    } catch (error: any) {
         console.error("database connection failed. " + error);
         throw error;
     }
 }
-
-
-module.exports =  { Work, all, findOne, findByStaffId,  sync, insertOne, insertMany, deleteOne }

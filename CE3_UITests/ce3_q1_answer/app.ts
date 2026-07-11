@@ -1,29 +1,28 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var process = require('process');
-var db = require('./models/db.js');
+import createError = require('http-errors');
+import express, { Request, Response, NextFunction } from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import * as process from 'process';
+import db from './models/db';
 
-var staffModel = require('./models/staff.js');
-var deptModel = require('./models/dept.js');
-var workfModel = require('./models/work.js');
+import * as staffModel from './models/staff';
+import * as deptModel from './models/dept';
+import * as workfModel from './models/work';
 
 staffModel.sync();
 deptModel.sync();
-workfModel.sync(); 
+workfModel.sync();
 
 process.on('SIGINT', db.cleanup);
 process.on('SIGTERM', db.cleanup);
 
+import indexRouter from './routes/index';
+import usersRouter from './routes/users';
+import deptRouter from './routes/dept';
+import staffRouter from './routes/staff';
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var deptRouter = require('./routes/dept');
-var staffRouter = require('./routes/staff');
-
-var app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -41,12 +40,12 @@ app.use('/staff', staffRouter);
 app.use('/dept', deptRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((req: Request, res: Response, next: NextFunction) => {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -56,4 +55,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+export default app;
