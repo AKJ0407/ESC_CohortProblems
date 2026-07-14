@@ -32,7 +32,17 @@ function handleSendButtonClick() {
     var name = document.getElementById("name");
     var code  = document.getElementById("code");
     var xhr = new XMLHttpRequest();
-    // TODO: fixme
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            var res = xhr.responseText;
+            var json = JSON.parse(res);
+            update_staffsregion(json);
+        }
+    };
+    var params = `name=${name.value}&code=${code.value}`;
+    xhr.open('POST', `/staff/submit/`, true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.send(params);
 }
 
 /**

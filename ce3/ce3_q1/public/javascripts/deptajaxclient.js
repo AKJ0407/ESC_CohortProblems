@@ -23,10 +23,10 @@ function handleSendButtonClick() {
         if (xhr.readyState == 4) {
             var res = xhr.responseText;
             var json = JSON.parse(res);
-            // TODO: fixme
+            update_deptsregion(json);
         }
     }; 
-    // cosntructing a HTTP POST request
+    // constructing a HTTP POST request
     var params = `code=${code.value}`;
     xhr.open('POST', `/dept/submit/`, true);
     //Send the proper header information along with the request
