@@ -107,6 +107,8 @@ function Staff() {
 
     useEffect( () => {
         // TODO: fixme:
+        initDepts();
+        initStaffs();
     }, []);
 
     return (
